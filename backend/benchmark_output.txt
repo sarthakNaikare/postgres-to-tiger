@@ -1,0 +1,39 @@
+Spinning up containers...
+Building workload...
+Benchmarking vanilla Postgres...
+Benchmarking TimescaleDB...
+
+=== BENCHMARK RESULTS ===
+{
+  "session_id": "85f270a8",
+  "postgres": {
+    "ingest_duration_seconds": 0.12,
+    "ingest_rate_rows_per_sec": 29854.58,
+    "avg_query_latency_ms": 2.54,
+    "p95_query_latency_ms": 5.17,
+    "storage_size": "208 kB",
+    "total_rows": 3500
+  },
+  "timescale": {
+    "ingest_duration_seconds": 1.93,
+    "ingest_rate_rows_per_sec": 1817.76,
+    "avg_query_latency_ms": 3.95,
+    "p95_query_latency_ms": 9.73,
+    "storage_size": "8192 bytes",
+    "total_rows": 3500
+  },
+  "verdict": {
+    "ingest_improvement": "0.06x",
+    "latency_improvement": "0.64x",
+    "recommend_migration": false
+  },
+  "workload_summary": {
+    "total_rows": 3500,
+    "total_queries": 10
+  }
+}
+
+Destroying containers...
+Destroyed container 45cf80169c07
+Destroyed container 95107b7ac97a
+Done.
