@@ -4,18 +4,30 @@ from services.container_manager import create_session_containers, destroy_sessio
 from services.workload_generator import WorkloadConfig
 from services.benchmark_runner import run_full_benchmark
 from services.sql_generator import generate_migration_sql
+import threading
 
 router = APIRouter()
+
+# Concurrency control — max 3 sessions at once
+MAX_CONCURRENT_SESSIONS = 3
+active_sessions = 0
+sessions_lock = threading.Lock()
 
 
 @router.post("/benchmark", response_model=BenchmarkResponse)
 async def run_benchmark(request: BenchmarkRequest, background_tasks: BackgroundTasks):
-    """
-    Main endpoint. Accepts a schema description, runs benchmark,
-    returns results. Containers are always destroyed after — even on error.
-    """
+    global active_sessions
 
-    # Build workload config from user request
+    # Check concurrency limit
+    with sessions_lock:
+        if active_sessions >= MAX_CONCURRENT_SESSIONS:
+            raise HTTPException(
+                status_code=429,
+                detail="Server is busy — max 3 concurrent benchmarks. Try again in a minute."
+            )
+        active_sessions += 1
+
+    # Build workload config
     config = WorkloadConfig(
         table_name=request.table_name,
         timestamp_column=request.timestamp_column,
@@ -29,12 +41,14 @@ async def run_benchmark(request: BenchmarkRequest, background_tasks: BackgroundT
     try:
         session = create_session_containers()
     except Exception as e:
+        with sessions_lock:
+            active_sessions -= 1
         raise HTTPException(
             status_code=503,
             detail=f"Could not start benchmark containers: {str(e)}"
         )
 
-    # Run benchmark — always destroy containers after, even if it crashes
+    # Run benchmark
     try:
         results = run_full_benchmark(session, config)
         migration_sql = generate_migration_sql(config)
@@ -48,7 +62,7 @@ async def run_benchmark(request: BenchmarkRequest, background_tasks: BackgroundT
         )
 
     finally:
-        # This runs no matter what — success or failure
-        # We use background_tasks so the response is sent first,
-        # then containers are cleaned up
+        # Always decrement counter and destroy containers
+        with sessions_lock:
+            active_sessions -= 1
         background_tasks.add_task(destroy_session_containers, session)

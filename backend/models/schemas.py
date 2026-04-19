@@ -1,12 +1,9 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from typing import List, Optional
+import re
 
 
 class BenchmarkRequest(BaseModel):
-    """
-    What the user sends us.
-    All fields are validated automatically by FastAPI.
-    """
     table_name: str = Field(
         ...,
         description="Name of the table to benchmark",
@@ -20,12 +17,12 @@ class BenchmarkRequest(BaseModel):
     value_columns: List[str] = Field(
         ...,
         description="List of numeric columns to benchmark",
-        example=["temperature", "humidity", "pressure"]
+        example=["temperature", "humidity"]
     )
     rows_per_day: int = Field(
         default=10000,
-        ge=1000,       # minimum 1000 rows/day
-        le=100000,     # maximum 100000 rows/day — safety limit
+        ge=1000,
+        le=100000,
         description="How many rows per day your workload inserts"
     )
     query_range_days: int = Field(
@@ -41,9 +38,47 @@ class BenchmarkRequest(BaseModel):
         description="How many days of data to simulate"
     )
 
+    @validator("table_name")
+    def table_name_must_be_valid(cls, v):
+        v = v.strip()
+        if not v:
+            raise ValueError("table_name cannot be empty")
+        if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', v):
+            raise ValueError(
+                "table_name must start with a letter or underscore "
+                "and contain only letters, numbers, underscores"
+            )
+        return v.lower()
+
+    @validator("timestamp_column")
+    def timestamp_column_must_be_valid(cls, v):
+        v = v.strip()
+        if not v:
+            raise ValueError("timestamp_column cannot be empty")
+        if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', v):
+            raise ValueError(
+                "timestamp_column must contain only letters, numbers, underscores"
+            )
+        return v.lower()
+
+    @validator("value_columns")
+    def value_columns_must_not_be_empty(cls, v):
+        if not v:
+            raise ValueError("value_columns must have at least one column")
+        if len(v) > 10:
+            raise ValueError("value_columns cannot have more than 10 columns")
+        cleaned = []
+        for col in v:
+            col = col.strip()
+            if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', col):
+                raise ValueError(
+                    f"Column name '{col}' is invalid — use only letters, numbers, underscores"
+                )
+            cleaned.append(col.lower())
+        return cleaned
+
 
 class DBResult(BaseModel):
-    """Results for one database."""
     ingest_duration_seconds: float
     ingest_rate_rows_per_sec: float
     avg_query_latency_ms: float
@@ -53,14 +88,12 @@ class DBResult(BaseModel):
 
 
 class Verdict(BaseModel):
-    """The recommendation."""
     ingest_improvement: str
     latency_improvement: str
     recommend_migration: bool
 
 
 class BenchmarkResponse(BaseModel):
-    """What we send back to the user."""
     session_id: str
     postgres: DBResult
     timescale: DBResult
