@@ -15,7 +15,7 @@ class BenchmarkRequest(BaseModel):
         v = v.strip()
         if not v:
             raise ValueError("table_name cannot be empty")
-        if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', v):
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", v):
             raise ValueError("table_name must use only letters, numbers, underscores")
         return v.lower()
 
@@ -24,7 +24,7 @@ class BenchmarkRequest(BaseModel):
         v = v.strip()
         if not v:
             raise ValueError("timestamp_column cannot be empty")
-        if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', v):
+        if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", v):
             raise ValueError("timestamp_column must use only letters, numbers, underscores")
         return v.lower()
 
@@ -32,15 +32,13 @@ class BenchmarkRequest(BaseModel):
     def value_columns_must_not_be_empty(cls, v):
         if not v:
             raise ValueError("value_columns must have at least one column")
-        if len(v) > 20:
-            raise ValueError("value_columns cannot have more than 20 columns")
         cleaned = []
         for col in v:
             col = col.strip()
             if not col:
                 continue
-            if not re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', col):
-                raise ValueError(f"Column must use only letters, numbers, underscores")
+            if not re.match(r"^[a-zA-Z_][a-zA-Z0-9_]*$", col):
+                raise ValueError("Column must use only letters, numbers, underscores")
             cleaned.append(col.lower())
         if not cleaned:
             raise ValueError("value_columns must have at least one valid column")
@@ -59,4 +57,10 @@ class Verdict(BaseModel):
     latency_improvement: str
     recommend_migration: bool
 
-class BenchmarkResponse(BaseM
+class BenchmarkResponse(BaseModel):
+    session_id: str
+    postgres: DBResult
+    timescale: DBResult
+    verdict: Verdict
+    workload_summary: dict
+    migration_sql: Optional[str] = None
