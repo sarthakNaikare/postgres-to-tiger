@@ -122,7 +122,7 @@ export default function Home() {
             <div>
               <label className="block text-sm text-gray-400 mb-2">Rows per Day</label>
               <input
-                type="number"
+                type="text" inputMode="numeric"
                 value={form.rows_per_day}
                 onChange={e => setForm({ ...form, rows_per_day: Math.min(500000, Math.max(100, parseInt(e.target.value) || 10000)) })}
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-orange-400"
@@ -131,7 +131,7 @@ export default function Home() {
             <div>
               <label className="block text-sm text-gray-400 mb-2">Query Range (days)</label>
               <input
-                type="number"
+                type="text" inputMode="numeric"
                 value={form.query_range_days}
                 onChange={e => setForm({ ...form, query_range_days: parseInt(e.target.value) || 0 })}
                 onBlur={e => setForm(f => ({ ...f, query_range_days: Math.min(60, Math.max(1, f.query_range_days || 7)) }))}
@@ -141,7 +141,7 @@ export default function Home() {
             <div>
               <label className="block text-sm text-gray-400 mb-2">Benchmark Days</label>
               <input
-                type="number"
+                type="text" inputMode="numeric"
                 value={form.benchmark_days}
                 onChange={e => setForm({ ...form, benchmark_days: parseInt(e.target.value) || 0 })}
                 onBlur={e => setForm(f => ({ ...f, benchmark_days: Math.min(30, Math.max(1, f.benchmark_days || 7)) }))}
