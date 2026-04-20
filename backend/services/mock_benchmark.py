@@ -54,7 +54,7 @@ def run_mock_benchmark(config: WorkloadConfig) -> dict:
         "verdict": {
             "ingest_improvement": f"{ingest_improvement}x",
             "latency_improvement": f"{latency_improvement}x",
-            "recommend_migration": latency_improvement > 1.2 and total_rows >= 10000
+            "recommend_migration": latency_improvement > 1.15 and total_rows >= 10000
         },
         "workload_summary": {
             "total_rows": total_rows,
