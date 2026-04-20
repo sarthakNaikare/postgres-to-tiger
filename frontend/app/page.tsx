@@ -124,7 +124,8 @@ export default function Home() {
               <input
                 type="text" inputMode="numeric"
                 value={form.rows_per_day}
-                onChange={e => setForm({ ...form, rows_per_day: Math.min(500000, Math.max(100, parseInt(e.target.value) || 10000)) })}
+                onChange={e => setForm({ ...form, rows_per_day: parseInt(e.target.value) || 0 })}
+                onBlur={e => setForm(f => ({ ...f, rows_per_day: Math.min(500000, Math.max(100, f.rows_per_day || 10000)) }))}
                 className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm focus:outline-none focus:border-orange-400"
               />
             </div>
