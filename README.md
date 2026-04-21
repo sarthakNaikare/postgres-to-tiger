@@ -163,3 +163,7 @@ Built with 🧡 by [Sarthak Naikare](https://github.com/sarthakNaikare)
 *Targeting the Database Support Engineer — Weekend (India) role at Tiger Data*
 
 </div>
+
+## 🔧 Debugging & Lessons Learned
+
+The most critical debugging moment came when TimescaleDB's storage size was reporting `8192 bytes` for 105,000 rows — clearly wrong. Root cause: `pg_total_relation_size()` doesn't count hypertable chunks in TimescaleDB since data is spread across internal child tables. Discovered this by querying `timescaledb_information.chunks` directly and comparing actual disk usage. Fixed by switching to `hypertable_size()` which correctly aggregates all chunk sizes. A second issue was the benchmark verdict occasionally recommending migration at only 300 rows where the latency difference was statistically meaningless — fixed by adding a minimum row threshold of 10,000 before issuing a recommendation. Key lesson: honest benchmarking requires understanding how each database reports its own internals — never assume the same query works identically across both systems.
